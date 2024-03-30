@@ -2,11 +2,15 @@ import requests
 import json
 
 class Jan:
-    def __init__(self, model="mistral-ins-7b-q4"):
+    def __init__(self,
+                 system_prompt="You are a helpful assistant.",
+                 model="mistral-ins-7b-q4"):
         self.model=model
         self.messages=[]
         self.payload = {}
         self.models = None
+        self.headers = {}
+        self.system_prompt=system_prompt
     
     def get_my_models(self):
         url = "http://localhost:1337/v1/models"
@@ -20,14 +24,14 @@ class Jan:
             print(print_response['message']['content'])
 
     def post_print_and_append(self,payload,headers):
-        response = requests.post("http://localhost:1337/v1/chat/completions", json=self.payload, headers=headers)
+        response = requests.post("http://localhost:1337/v1/chat/completions", json=payload, headers=headers)
         for print_response in response.json()['choices']:
             print(print_response['message']['content'])
             self.messages.append({"content":print_response['message']['content'],"role":"assistant"})
 
         self.payload['messages']= self.messages
 
-    def completion(self,user_msg,system_prompt="You are a helpful assistant.",
+    def completion(self,user_msg,
     max_tokens=2048,
     frequency_penalty=0,
     presence_penalty=0,
@@ -37,7 +41,7 @@ class Jan:
         payload = {
             "messages": [
                 {
-                    "content": system_prompt,
+                    "content": self.system_prompt,
                     "role": "system"
                 },
                 {
@@ -57,7 +61,7 @@ class Jan:
 
         self.post_and_print(payload,headers)
 
-    def start_thread(self,user_msg,system_prompt="You are a helpful assistant.",
+    def start_thread(self,user_msg,
     max_tokens=2048,
     frequency_penalty=0,
     presence_penalty=0,
@@ -66,7 +70,7 @@ class Jan:
     ):
         self.messages =  [
                 {
-                    "content": system_prompt,
+                    "content": self.system_prompt,
                     "role": "system"
                 },
                 {
@@ -84,13 +88,12 @@ class Jan:
             "temperature": temperature,
             "top_p": top_p,
         }
-        headers = {"Content-Type": "application/json"}
+        self.headers = {"Content-Type": "application/json"}
 
-        self.post_print_and_append(self.payload,headers)
+        self.post_print_and_append(self.payload,self.headers)
 
     
     def continue_thread(self,user_msg):
-        headers = {"Content-Type": "application/json"}
         self.payload['messages'].append({'content':user_msg,"role":"user"})
-        self.post_print_and_append(self.payload,headers)
+        self.post_print_and_append(self.payload,self.headers)
         
