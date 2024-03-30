@@ -6,6 +6,13 @@ class Jan:
         self.model=model
         self.messages=[]
         self.payload = {}
+        self.models = None
+    
+    def get_my_models(self):
+        url = "http://localhost:1337/v1/models"
+        response = requests.get(url)
+        self.models=response.json()
+        return response.json()
     
     def post_and_print(self,payload,headers):
         response = requests.post("http://localhost:1337/v1/chat/completions", json=payload, headers=headers)
