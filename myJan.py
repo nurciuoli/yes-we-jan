@@ -6,6 +6,19 @@ class Jan:
         self.model=model
         self.messages=[]
         self.payload = {}
+    
+    def post_and_print(self,payload,headers):
+        response = requests.post("http://localhost:1337/v1/chat/completions", json=payload, headers=headers)
+        for print_response in response.json()['choices']:
+            print(print_response['message']['content'])
+
+    def post_print_and_append(self,payload,headers):
+        response = requests.post("http://localhost:1337/v1/chat/completions", json=self.payload, headers=headers)
+        for print_response in response.json()['choices']:
+            print(print_response['message']['content'])
+            self.messages.append({"content":print_response['message']['content'],"role":"assistant"})
+
+        self.payload['messages']= self.messages
 
     def completion(self,user_msg,system_prompt="You are a helpful assistant.",
     max_tokens=2048,
@@ -35,9 +48,7 @@ class Jan:
         }
         headers = {"Content-Type": "application/json"}
 
-        response = requests.post("http://localhost:1337/v1/chat/completions", json=payload, headers=headers)
-        for print_response in response.json()['choices']:
-            print(print_response['message']['content'])
+        self.post_and_print(payload,headers)
 
     def start_thread(self,user_msg,system_prompt="You are a helpful assistant.",
     max_tokens=2048,
@@ -68,24 +79,11 @@ class Jan:
         }
         headers = {"Content-Type": "application/json"}
 
-        response = requests.post("http://localhost:1337/v1/chat/completions", json=self.payload, headers=headers)
-        for print_response in response.json()['choices']:
-            print(print_response['message']['content'])
-            self.messages.append({"content":print_response['message']['content'],"role":"system"})
-
-        self.payload['messages']= self.messages
+        self.post_print_and_append(self.payload,headers)
 
     
     def continue_thread(self,user_msg):
         headers = {"Content-Type": "application/json"}
-
-        self.messages.append({'content':user_msg,"role":"user"})
-
-        response = requests.post("http://localhost:1337/v1/chat/completions", json=self.payload, headers=headers)
-        for print_response in response.json()['choices']:
-            print(print_response['message']['content'])
-            self.messages.append({"content":print_response['message']['content'],"role":"system"})
-
-        self.payload['messages']= self.messages
-
+        self.payload['messages'].append({'content':user_msg,"role":"user"})
+        self.post_print_and_append(self.payload,headers)
         
